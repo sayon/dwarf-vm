@@ -1,0 +1,27 @@
+BITS 64
+%include "dwarf_assembly.inc"
+
+CONST
+db 'hello', 0
+db 'omg', 0
+ENDCONST
+
+FUNCTIONS_COUNT 1
+
+fun_hello:
+dq 0
+dq 0
+dq 0
+dq 0
+times 16 db 0
+CODE_SIZE
+
+ CODE
+
+LOADS 0
+SPRINT
+LOADS 1
+SPRINT
+RETURN
+
+ENDCODE
