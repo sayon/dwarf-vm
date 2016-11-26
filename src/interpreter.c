@@ -212,7 +212,7 @@ __attribute__((always_inline))
             FOR_BYTECODES( LABEL_NAME_ARRAY ) 
                 0 };
 
-#define LABEL_NAME_ARRAY(n,d,l) &&_##n,
+#undef LABEL_NAME_ARRAY
 
         goto *labels[ *vm->instr_ptr ];
 
