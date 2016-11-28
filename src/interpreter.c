@@ -64,10 +64,14 @@ DEFINE_BINOP( IMOD, int,  % )
 #undef DEFINE_BINOP
 
 __attribute__((always_inline))
-    static void interpret_DNEG(struct vm_machine* vm, FILE* debug){ }
+    static void interpret_DNEG(struct vm_machine* vm, FILE* debug){ 
+    vm->data_stack_ptr->as_double =  - vm->data_stack_ptr->as_double; 
+    }
 
 __attribute__((always_inline))
-    static void interpret_INEG(struct vm_machine* vm, FILE* debug){ }
+    static void interpret_INEG(struct vm_machine* vm, FILE* debug){ 
+    vm->data_stack_ptr->as_int =  - vm->data_stack_ptr->as_int ; 
+   }
 
 __attribute__((always_inline))
     static void interpret_IPRINT(struct vm_machine* vm, FILE* debug){
