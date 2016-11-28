@@ -41,9 +41,9 @@
         DO(IMOD,		"Modulo operation on 2 ints on stack", 1)\
         DO(DNEG,		"Negate double on TOS.", 1)\
         DO(INEG,		"Negate int on TOS.", 1)\
-        DO(IPRINT,		"Pop and print integer TOS.", 1)\
-        DO(DPRINT,		"Pop and print double TOS.", 1)\
-        DO(SPRINT,		"Pop and print string TOS.", 1)\
+        DO(IPRINT,		"Pop and print integer on TOS.", 1)\
+        DO(DPRINT,		"Pop and print double on TOS.", 1)\
+        DO(SPRINT,		"Pop and print string on TOS.", 1)\
         DO(I2D,	    	"Convert int on TOS to double.", 1)\
         DO(D2I,	    	"Convert double on TOS to int.", 1)\
         DO(S2I,	        "Convert string on TOS to int.", 1)\
@@ -51,10 +51,10 @@
         DO(POP  ,		"Remove topmost value.", 1)\
         DO(LOADVAR,		"Load value from variable, whose 4-byte id is inlined to insn stream, push on TOS.", 5)\
         DO(LOADSVAR,	"Load constant pool string address by its id, taken from from variable, whose 4-byte id is inlined to insn stream.", 5)\
-        DO(LOADCTXVAR,	"Load value from a variable whose 2-byte context id and 4-byte id is inlined into insn stream.", 5)\
-        DO(STOREVAR,	"Pop TOS and store to a variable, whose l-byte id is inlined to insn stream.", 5)\
-        DO(STORECTXVAR,	"Pop TOS and store to double variable, whose 2-byte context and 4-byte id is inlined to insn stream.", 7)\
-        DO(DCMP,		"Compare 2 topmost doubles, pushing libc-stryle comparator value cmp(upper, lower) as integer.", 1)\
+        DO(LOADCTXVAR,	"Load value from a variable whose 4-byte context id and 4-byte id is inlined into insn stream.", 9)\
+        DO(STOREVAR,	"Pop TOS and store to a variable, whose 4-byte id is inlined to insn stream.", 5)\
+        DO(STORECTXVAR,	"Pop TOS and store to double variable, whose 4-byte context and 4-byte id is inlined to insn stream.", 7)\
+        DO(DCMP,		"Compare 2 topmost doubles, pushing libc-style comparator value cmp(upper, lower) as integer.", 1)\
         DO(ICMP,		"Compare 2 topmost ints, pushing libc-style comparator value cmp(upper, lower) as integer.", 1)\
         DO(JA,	    	"Jump always, next two bytes - signed offset of jump destination.", 3)\
         DO(IFICMPNE,	"Compare two topmost integers and jump if upper != lower, next two bytes - signed offset of jump destination.", 3)\
