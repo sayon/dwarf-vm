@@ -83,11 +83,5 @@ void fun_deinit( struct vm_fun* fun );
 /// Free all functions inside.
 void funs_deinit( struct vm_funs* funs );
 
-/// Size of the corresponding runtime context, including local variables.
-size_t fun_ctx_size( struct vm_fun* f ) ;
-
-/// Size of an existing context, including local variables.
-size_t ctx_size( struct vm_ctx const* ctx );
-
 
 /** @} */
