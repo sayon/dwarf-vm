@@ -32,7 +32,7 @@ TARGET      = vm
 ASM         = nasm
 ASMFLAGS    = -fbin -I$(TESTDIR)/
 
-all: $(BUILDDIR) $(OBJDIR) $(BUILDDIR)/$(TARGET) $(OBJECTS) $(TESTS) $(TESTTARGETS) docs
+all: $(BUILDDIR) $(OBJDIR) $(BUILDDIR)/$(TARGET) $(OBJECTS) $(TESTS) $(TESTTARGETS)
  
 $(BUILDDIR)/$(TARGET): $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
