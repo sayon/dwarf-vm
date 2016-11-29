@@ -37,7 +37,7 @@ static void prog_dump_file( const char* name, const struct vm_prog* prog ) {
 int main( int argc, char const* const* argv) {
     struct vm_machine vm;
     struct vm_prog prog = {0};
-    if (argc < 2) { fprintf( stderr, "Usage: vm file1 ... fileN" ); return 2;}
+    if (argc < 2) { fprintf( stderr, "Usage: vm file1 ... fileN\n" ); return 2;}
 
     enum vm_load_result file_load_status = 
         file_load_many( argv + 1, argc-1, &prog, on_load_fail );
@@ -62,7 +62,7 @@ int main( int argc, char const* const* argv) {
 
     struct vm_fun* main_fun = fun_by_name( & vm.prog , "main" );
     if (! main_fun ) { 
-        fprintf( trace, "No <main> function defined!" );
+        fprintf( trace, "No <main> function defined!\n" );
         return VM_EXIT_NO_MAIN; }
     else 
         fprintf( trace, "Main function: id %lu, name %lu\n", main_fun->meta.id, main_fun->meta.sig.name );
