@@ -16,7 +16,7 @@ static const bool DEBUG = 1;
  * @{ */
 
 #define OPCODE_HANDLER(OPCODE) \
-    __attribute__((allways_inline)) \
+    __attribute__((always_inline)) \
 static void interpret_##OPCODE(struct vm_machine* vm, FILE *debug)
 
 #define OPCODE_HANDLER_UNIMPLEMENTED(OPCODE) \

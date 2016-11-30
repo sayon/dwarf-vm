@@ -27,7 +27,7 @@
 enum vm_load_result file_check_signature( FILE* f ) {
     uint8_t sig[2];
     
-    READ( sig, 2 )
+    READ( sig, 2 );
 
     if ( sig[0] == FILE_MAGIC_SND && sig[1] == FILE_MAGIC_FST )
         return LOAD_OK;
@@ -36,7 +36,7 @@ enum vm_load_result file_check_signature( FILE* f ) {
 
 enum vm_load_result file_check_version( FILE* f ) {
     uint64_t version;
-    READ( &version, 8 )
+    READ( &version, 8 );
     if ( FILE_FORMAT_VERSION != version ) return LOAD_INCOMPATIBLE_VERSION; 
     return LOAD_OK;
 }
@@ -60,10 +60,10 @@ init_const_pool_str_addrs( char const* pool, size_t sz ) {
 enum vm_load_result
 file_read_consts( FILE* f, struct vm_const_pool* pool ) {
     uint64_t sz;
-    READVAR( &sz )
+    READVAR( &sz );
     pool-> sz = sz;
     char* contents = alloc( sz, "Reading constant pool from file" );
-    READ_OR( contents, sz, { free( contents ); }  )
+    READ_OR( contents, sz, { free( contents ); }  );
 
     *pool = init_const_pool_str_addrs( contents, sz );
     return LOAD_OK;
