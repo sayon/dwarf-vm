@@ -8,27 +8,34 @@
 #include <inttypes.h>
 #include <instructions.h>
 
-static vm_val val_at( void* ptr ) { return *( (vm_val*)ptr ); }
+static vm_val val_at( void* ptr ) {return *( (vm_val*)ptr ); }
 
 static const bool DEBUG = 1;
 
 /** @addtogroup interpreter 
  * @{ */
 
+#define OPCODE_HANDLER(OPCODE) \
+    __attribute__((allways_inline)) \
+static void interpret_##OPCODE(struct vm_machine* vm, FILE *debug)
 
-__attribute__((always_inline))
-    static void interpret_INVALID(struct vm_machine* vm, FILE* debug){ 
-        (void) vm; fprintf( debug, "Invalid operation\n" ); exit(2);
+#define OPCODE_HANDLER_UNIMPLEMENTED(OPCODE) \
+    OPCODE_HANDLER(OPCODE) { \
+        (void) vm; \
+        fprintf( debug, "Opcode " #OPCODE " is not implemented.\n" ); \
+        exit(2); \
     }
 
-__attribute__((always_inline))
-    static void interpret_LOAD(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(INVALID) {
+    (void) vm; fprintf( debug, "Invalid operation\n" ); exit(2);
+}
+
+OPCODE_HANDLER(LOAD) {
         vm->data_stack_ptr --;
         *(vm->data_stack_ptr) = val_at( vm-> instr_ptr+1 );
     }
 
-__attribute__((always_inline))
-    static void interpret_LOADS(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(LOADS) {
         vm->data_stack_ptr--;
         const vm_val id = val_at( vm-> instr_ptr+1 ) ;
         vm->data_stack_ptr->as_ptr = (void*) 
@@ -42,8 +49,7 @@ __attribute__((always_inline))
  * @param action   Binary infix operand such as `+` or `/`
  */ 
 #define DEFINE_BINOP(mnemonic, type, action)\
-__attribute__((always_inline))\
-    static void interpret_##mnemonic(struct vm_machine* vm, FILE* debug){ \
+OPCODE_HANDLER(mnemonic) {\
         const vm_val* x = vm->data_stack_ptr ;\
         const vm_val* y = vm->data_stack_ptr + 1;\
         vm->data_stack_ptr++;\
@@ -63,100 +69,52 @@ DEFINE_BINOP( IMOD, int,  % )
 
 #undef DEFINE_BINOP
 
-__attribute__((always_inline))
-    static void interpret_DNEG(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(DNEG) {
     vm->data_stack_ptr->as_double =  - vm->data_stack_ptr->as_double; 
     }
 
-__attribute__((always_inline))
-    static void interpret_INEG(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(INEG) {
     vm->data_stack_ptr->as_int =  - vm->data_stack_ptr->as_int ; 
    }
 
-__attribute__((always_inline))
-    static void interpret_IPRINT(struct vm_machine* vm, FILE* debug){
+OPCODE_HANDLER(IPRINT) {
         printf("%"PRIi64, vm->data_stack_ptr->as_int); 
         vm->data_stack_ptr++; 
     }
 
-__attribute__((always_inline))
-    static void interpret_DPRINT(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(DPRINT) {
         printf("%lf", vm->data_stack_ptr->as_double );
         vm->data_stack_ptr++; 
     }
 
-__attribute__((always_inline))
-    static void interpret_SPRINT(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(SPRINT) {
         fputs( vm->data_stack_ptr->as_ptr, stdout );
         vm->data_stack_ptr++; 
     }
 
-__attribute__((always_inline))
-    static void interpret_I2D(struct vm_machine* vm, FILE* debug){ }
+OPCODE_HANDLER_UNIMPLEMENTED(I2D);
+OPCODE_HANDLER_UNIMPLEMENTED(D2I);
+OPCODE_HANDLER_UNIMPLEMENTED(S2I);
+OPCODE_HANDLER_UNIMPLEMENTED(SWAP);
+OPCODE_HANDLER_UNIMPLEMENTED(POP);
+OPCODE_HANDLER_UNIMPLEMENTED(LOADVAR);
+OPCODE_HANDLER_UNIMPLEMENTED(LOADSVAR);
+OPCODE_HANDLER_UNIMPLEMENTED(STOREVAR);
+OPCODE_HANDLER_UNIMPLEMENTED(LOADCTXVAR);
+OPCODE_HANDLER_UNIMPLEMENTED(STORECTXVAR);
+OPCODE_HANDLER_UNIMPLEMENTED(STORECTXSVAR);
+OPCODE_HANDLER_UNIMPLEMENTED(DCMP);
+OPCODE_HANDLER_UNIMPLEMENTED(ICMP);
+OPCODE_HANDLER_UNIMPLEMENTED(JA);
+OPCODE_HANDLER_UNIMPLEMENTED(IFICMPNE);
+OPCODE_HANDLER_UNIMPLEMENTED(IFICMPE);
+OPCODE_HANDLER_UNIMPLEMENTED(IFICMPG);
+OPCODE_HANDLER_UNIMPLEMENTED(IFICMPGE);
+OPCODE_HANDLER_UNIMPLEMENTED(IFICMPL);
+OPCODE_HANDLER_UNIMPLEMENTED(IFICMPLE);
+OPCODE_HANDLER_UNIMPLEMENTED(DUMP);
 
-__attribute__((always_inline))
-    static void interpret_D2I(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_S2I(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_SWAP(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_POP(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_LOADVAR(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_LOADSVAR(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_STOREVAR(struct vm_machine* vm, FILE* debug){ }
-
-
-__attribute__((always_inline))
-    static void interpret_LOADCTXVAR(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_STORECTXVAR(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_STORECTXSVAR(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_DCMP(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_ICMP(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_JA(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_IFICMPNE(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_IFICMPE(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_IFICMPG(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_IFICMPGE(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_IFICMPL(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_IFICMPLE(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_DUMP(struct vm_machine* vm, FILE* debug){ }
-
-__attribute__((always_inline))
-    static void interpret_STOP(struct vm_machine* vm, FILE* debug){ exit(0); }
+OPCODE_HANDLER(STOP) {exit(0); }
 
 
 __attribute__((always_inline))
@@ -174,9 +132,7 @@ static void ctx_init( struct vm_ctx* ctx,
 
     }
 
-
-__attribute__((always_inline))
-    static void interpret_CALL(struct vm_machine* vm, FILE* debug){ 
+OPCODE_HANDLER(CALL) {
         vm_val fun_id = val_at( vm->instr_ptr + 1);
         struct vm_fun* const fun = vm->prog.funs.by_id + fun_id.as_int;
 
@@ -192,19 +148,16 @@ __attribute__((always_inline))
         vm->instr_ptr = fun->code - 9;
     }
 
-__attribute__((always_inline))
-    static void interpret_CALLNATIVE(struct vm_machine* vm, FILE* debug){ }
+OPCODE_HANDLER_UNIMPLEMENTED(CALLNATIVE);
 
-__attribute__((always_inline))
-    static void interpret_RETURN(struct vm_machine* vm, FILE* debug){
+OPCODE_HANDLER(RETURN) {
         vm->instr_ptr = vm->ctx_stack_ptr->ret_addr - 1;
         vm-> ctx_stack_ptr->fun->meta.topmost_present =
             vm-> ctx_stack_ptr->ctx_prev_same_id;
         vm-> ctx_stack_ptr = vm->ctx_stack_ptr->ctx_prev;
     }
 
-__attribute__((always_inline))
-    static void interpret_BREAK(struct vm_machine* vm, FILE* debug){ }
+OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
 
 
     void interpret( struct vm_machine* vm, uint64_t id, FILE* debug ) {
