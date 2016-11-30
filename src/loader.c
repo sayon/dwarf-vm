@@ -197,7 +197,11 @@ enum vm_load_result file_load_by_name(
             prog_deinit( &prog ); 
             return LOAD_IO_ERROR; } 
     }
-    else return load_status; 
+    else {
+        error_callback( LOAD_IO_ERROR, name );
+        prog_deinit( &prog ); 
+        return load_status; 
+    }
 }
 
 enum vm_load_result file_load_many(
@@ -215,13 +219,10 @@ enum vm_load_result file_load_many(
     if ( status != LOAD_OK ) return status;
 
     for( size_t i = 1; i < count; i++ ){
-
         struct vm_prog current = {0};
         status = file_load_by_name( names[i], &current, error_callback );
         if ( status != LOAD_OK ) {
             prog_deinit( &prog );
-            if (error_callback)
-                error_callback( status, names[i] );
             return status;
         } 
         prog = prog_combine_destr( &prog, &current );
