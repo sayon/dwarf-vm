@@ -17,7 +17,7 @@ static const bool DEBUG = 1;
 
 #define OPCODE_HANDLER(OPCODE) \
     __attribute__((allways_inline)) \
-static void interpret_##OPCODE(struct vm_machine* vm, FILE *debug) \
+static void interpret_##OPCODE(struct vm_machine* vm, FILE *debug)
 
 OPCODE_HANDLER(INVALID) {
     (void) vm; fprintf( debug, "Invalid operation\n" ); exit(2);
