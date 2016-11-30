@@ -70,7 +70,6 @@ OPCODE_HANDLER(INEG) {
     vm->data_stack_ptr->as_int =  - vm->data_stack_ptr->as_int ; 
    }
 
-__attribute__((always_inline))
 OPCODE_HANDLER(IPRINT) {
         printf("%"PRIi64, vm->data_stack_ptr->as_int); 
         vm->data_stack_ptr++; 
