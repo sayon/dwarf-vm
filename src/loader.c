@@ -29,7 +29,7 @@ enum vm_load_result file_check_signature( FILE* f ) {
     
     READ( sig, 2 );
 
-    if ( sig[0] == FILE_MAGIC_SND && sig[1] == FILE_MAGIC_FST )
+    if ( sig[0] == FILE_MAGIC_FST && sig[1] == FILE_MAGIC_SND )
         return LOAD_OK;
     return LOAD_INVALID_FORMAT; 
 }
