@@ -62,7 +62,7 @@ file_read_consts( FILE* f, struct vm_const_pool* pool ) {
     uint64_t sz;
     READVAR( &sz );
     pool-> sz = sz;
-    char* contents = alloc( sz, "Reading constant pool from file" );
+    char* contents = malloc( sz );
     READ_OR( contents, sz, { free( contents ); }  );
 
     *pool = init_const_pool_str_addrs( contents, sz );
@@ -115,8 +115,8 @@ file_read_fun( FILE* f, struct vm_fun* fun ) {
     struct vm_fun_serialized buf = {0};
     READVAR( &buf );
     *fun = deserialize_fun( &buf ); 
-    fun-> code = alloc( fun-> code_sz, 
-            "Bytecode for some function..." );
+    fun-> code = malloc( fun-> code_sz );
+
     READ_OR( fun->code, fun-> code_sz, 
             { free( fun-> code ); } ); 
     return LOAD_OK;
@@ -134,7 +134,7 @@ file_read_funs( FILE* f, struct vm_funs* funs ) {
     assert( funs );
 
     READVAR( &funs->count );
-    funs->by_id = alloc( (funs->count) * sizeof( struct vm_fun ), "functions" );
+    funs->by_id = malloc( (funs->count) * sizeof( struct vm_fun ) );
 
     for( size_t i = 0; i < funs->count; i++ ) {
         enum vm_load_result status;

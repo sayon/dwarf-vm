@@ -28,7 +28,7 @@ struct vm_fun* fun_by_name( struct vm_prog* p, const char* name ) {
 static
 void fun_copy_bytecode( struct vm_fun const* src, 
         struct vm_fun* dest) {
-    dest-> code = alloc( src-> code_sz, "bytecode copy" );
+    dest-> code = malloc( src-> code_sz );
    memcpy(  dest-> code, src-> code, src-> code_sz );
    dest-> code_sz = src-> code_sz; 
 }
@@ -40,8 +40,8 @@ struct vm_funs funs_combine(
         size_t reloc_offset ) {
     struct vm_funs result; 
     result.count = a-> count + b-> count;
-    result.by_id = alloc( result.count * sizeof( struct vm_fun ), 
-            "new fun_t::by_id" );
+    result.by_id = malloc( result.count * sizeof( struct vm_fun ) );
+
     for( size_t i = 0;         i < a->   count; i++ ) 
     {
         result.by_id[i] = a-> by_id[ i ];

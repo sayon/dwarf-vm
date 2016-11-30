@@ -22,7 +22,7 @@ struct vm_const_pool const_combine(
     res.count = a->count + b->count;
     res.sz = a->sz + b->sz;
 
-    char* new_pool = alloc( res.sz, "New string pool" );
+    char* new_pool = malloc( res.sz );
     memcpy( new_pool, a->pool, a->sz );
     memcpy( new_pool + a->sz, b->pool, b->sz ); 
 

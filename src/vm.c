@@ -11,8 +11,8 @@ void vm_init(
         size_t ctx_stack_sz,
         struct vm_prog prog
         ) {
-    vm-> data_stack_limit = alloc( data_stack_sz, "data stack" );
-    vm-> ctx_stack_limit = alloc( ctx_stack_sz, "context stack" );
+    vm-> data_stack_limit = malloc( data_stack_sz );
+    vm-> ctx_stack_limit = malloc( ctx_stack_sz );
     vm-> data_stack_ptr =
          vm-> data_stack_limit + data_stack_sz / sizeof(vm_val) - 1;
     vm-> ctx_stack_ptr = ptr_add_raw( vm-> ctx_stack_limit , ctx_stack_sz );

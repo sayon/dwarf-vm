@@ -14,9 +14,7 @@ char const** divide_on_strings(
         size_t sz, 
         size_t count ) { 
 
-    char const** ptrs = alloc( 
-            count * sizeof( char const* ),
-            "Initializing a constant pool" ); 
+    char const** ptrs = malloc( count * sizeof( char const* ) );
 
     ptrs[0] = pool;
     size_t j = 1; 

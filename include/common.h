@@ -25,19 +25,6 @@ typedef union {
     void*   as_ptr;
 } vm_val;
 
-/** A malloc() wrapper which crashes if malloc() fails.
- * aborts the program execution if
- * @param sz Size of an area to allocate in bytes
- * @param msg Message to be displayed if `malloc` fails. Can be NULL.
-*/
-static inline 
-void* alloc( size_t sz, const char* msg ) {
-    void* res = malloc( sz );
-    if (res) return res;
-    if (msg) perror( msg ); 
-    abort();
-    return NULL;
-}
 
 /** Utility, change pointer without multiplying by element size.
  */
