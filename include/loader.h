@@ -55,7 +55,7 @@ enum vm_load_result file_load( FILE* f, struct vm_prog* prog );
 enum vm_load_result file_load_by_name( 
         const char* name, 
         struct vm_prog* result_prog,
-        void (error_callback)(enum vm_load_result, const char*) 
+        FILE* err 
         );
 
 
@@ -69,7 +69,7 @@ enum vm_load_result file_load_many(
         char const* const* names, 
         size_t count, 
         struct vm_prog* result,
-        void (error_callback)(enum vm_load_result, const char*) );
+        FILE* err );
 
 		
 /** @} */

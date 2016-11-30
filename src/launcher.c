@@ -20,9 +20,6 @@ enum vm_exit_code {
    VM_EXIT_NO_MAIN         /// < No function with name `main` defined.
 };
 
-static void on_load_fail( enum vm_load_result status, const char* file_name ) {
-    perror( file_name ); 
-}
 
 /** Dump program to a file .
  * @param name File name.
@@ -40,7 +37,7 @@ int main( int argc, char const* const* argv) {
     if (argc < 2) { fprintf( stderr, "Usage: vm file1 ... fileN\n" ); return 2;}
 
     enum vm_load_result file_load_status = 
-        file_load_many( argv + 1, argc-1, &prog, on_load_fail );
+        file_load_many( argv + 1, argc-1, &prog, stderr );
 
     if (file_load_status == LOAD_IO_ERROR) return VM_EXIT_BAD_FILE;
     if (file_load_status == LOAD_INVALID_FORMAT || 

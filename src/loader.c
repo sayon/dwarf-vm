@@ -174,53 +174,45 @@ file_load( FILE* f, struct vm_prog* prog ) {
 enum vm_load_result file_load_by_name( 
         const char* name, 
         struct vm_prog* result_prog,
-        void (error_callback)(enum vm_load_result, const char*) 
+        FILE* err
         ) {
     assert( name ); assert( result_prog );
 
     struct vm_prog prog;
     FILE* f = fopen( name, "rb" );
-    if (! f ) { 
-        error_callback( LOAD_IO_ERROR, name); 
-        return LOAD_IO_ERROR; 
-    }
-  
+    if (! f ) { fprintf( err, "Error opening file %s\n", name ); return LOAD_IO_ERROR; }
+
     enum vm_load_result load_status = file_load( f, &prog );
 
-    if ( load_status == LOAD_OK ) {
-        if (! fclose( f ) ) { 
-            *result_prog = prog; 
-            return LOAD_OK;
-        }
-        else { 
-            error_callback( LOAD_IO_ERROR, name );
-            prog_deinit( &prog ); 
-            return LOAD_IO_ERROR; } 
+    if ( load_status == LOAD_OK ) { 
+        fclose( f );
+        *result_prog = prog; 
+        return LOAD_OK;
     }
-    else {
-        error_callback( LOAD_IO_ERROR, name );
+    else { 
+        fprintf( err, "Error loading file %s\n", name );  
         prog_deinit( &prog ); 
-        return load_status; 
-    }
+        return load_status;
+    } 
 }
 
 enum vm_load_result file_load_many(
         char const* const* names, 
         size_t count, 
         struct vm_prog* result,
-        void (error_callback)(enum vm_load_result, const char*) ){
+        FILE* err ){
 
     struct vm_prog prog; 
     if (count == 0) return LOAD_INVALID_ARGUMENTS;
 
     enum vm_load_result status;
 
-    status = file_load_by_name( names[0], &prog, error_callback );
+    status = file_load_by_name( names[0], &prog, err );
     if ( status != LOAD_OK ) return status;
 
     for( size_t i = 1; i < count; i++ ){
         struct vm_prog current = {0};
-        status = file_load_by_name( names[i], &current, error_callback );
+        status = file_load_by_name( names[i], &current, err );
         if ( status != LOAD_OK ) {
             prog_deinit( &prog );
             return status;
