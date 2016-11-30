@@ -13,12 +13,12 @@
 #define FILE_MAGIC_SND 0xBA
 
 #define READVAR( addr ) \
-    if (! fread( (addr), sizeof(*(addr)), 1, f) ) return LOAD_IO_ERROR;
+    do { if (! fread( (addr), sizeof(*(addr)), 1, f) ) return LOAD_IO_ERROR; } while (0)
 #define READ( addr, size ) \
-    if (! fread( (addr), size, 1, f) ) return LOAD_IO_ERROR;
+    do { if (! fread( (addr), size, 1, f) ) return LOAD_IO_ERROR; } while (0)
 
 #define READ_OR( addr, size, finally ) \
-    if (! fread( (addr), size, 1, f) ){ finally; return LOAD_IO_ERROR; }
+    do { if (! fread( (addr), size, 1, f) ){ finally; return LOAD_IO_ERROR; }  } while (0)
 
 /** @addtogroup loader Loader
  *
