@@ -31,8 +31,10 @@ OPCODE_HANDLER(INVALID) {
 }
 
 OPCODE_HANDLER(LOAD) {
+
         vm->data_stack_ptr --;
         *(vm->data_stack_ptr) = val_at( vm-> instr_ptr+1 );
+        if (DEBUG) fprintf( debug, "\tvalue: %d", *(vm->data_stack_ptr) );
     }
 
 OPCODE_HANDLER(LOADS) {
@@ -97,21 +99,45 @@ OPCODE_HANDLER_UNIMPLEMENTED(D2I);
 OPCODE_HANDLER_UNIMPLEMENTED(S2I);
 OPCODE_HANDLER_UNIMPLEMENTED(SWAP);
 OPCODE_HANDLER_UNIMPLEMENTED(POP);
-OPCODE_HANDLER_UNIMPLEMENTED(LOADVAR);
+
+OPCODE_HANDLER(LOADVAR) {
+        uint32_t id = *(uint32_t*)( vm->instr_ptr + 1);
+        vm->data_stack_ptr--;
+        *(vm->data_stack_ptr) = vm->ctx_stack_ptr->locals[ id ];
+    }
+
 OPCODE_HANDLER_UNIMPLEMENTED(LOADSVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(STOREVAR);
+
+OPCODE_HANDLER(STOREVAR) {
+        uint32_t id = *(uint32_t*)( vm->instr_ptr + 1);
+        vm->ctx_stack_ptr->locals[ id ] = *(vm->data_stack_ptr);
+        vm->data_stack_ptr++;
+    }
+
 OPCODE_HANDLER_UNIMPLEMENTED(LOADCTXVAR);
 OPCODE_HANDLER_UNIMPLEMENTED(STORECTXVAR);
 OPCODE_HANDLER_UNIMPLEMENTED(STORECTXSVAR);
 OPCODE_HANDLER_UNIMPLEMENTED(DCMP);
 OPCODE_HANDLER_UNIMPLEMENTED(ICMP);
-OPCODE_HANDLER_UNIMPLEMENTED(JA);
+
+OPCODE_HANDLER(JA) {
+        int16_t offset = *(int16_t*)( vm->instr_ptr + 1);
+        vm->instr_ptr += offset;
+    }
+
 OPCODE_HANDLER_UNIMPLEMENTED(IFICMPNE);
 OPCODE_HANDLER_UNIMPLEMENTED(IFICMPE);
 OPCODE_HANDLER_UNIMPLEMENTED(IFICMPG);
 OPCODE_HANDLER_UNIMPLEMENTED(IFICMPGE);
 OPCODE_HANDLER_UNIMPLEMENTED(IFICMPL);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPLE);
+
+OPCODE_HANDLER(IFICMPLE) {
+        int16_t offset = *(int16_t*)( vm->instr_ptr + 1);
+        vm_val right = *vm->data_stack_ptr++;
+        vm_val left = *vm->data_stack_ptr++;
+        if (DEBUG) fprintf( debug, "\tleft: %d right: %d", left.as_int, right.as_int );
+        if ( left.as_int <= right.as_int ) vm->instr_ptr += offset;
+}
 OPCODE_HANDLER_UNIMPLEMENTED(DUMP);
 
 OPCODE_HANDLER(STOP) {exit(0); }
@@ -177,7 +203,7 @@ OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
         _##n: \
         if (DEBUG) fprintf( debug, "IP: %p " #n, vm->instr_ptr ); \
         interpret_##n( vm, debug ); \
-        if (DEBUG) fprintf( debug, "n" ); \
+        if (DEBUG) fprintf( debug, "\n" ); \
         vm->instr_ptr+=l; \
         goto *labels[ *vm->instr_ptr ];
 
