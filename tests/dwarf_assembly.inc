@@ -28,10 +28,20 @@ dq %1
 %define S2I          db   19
 %define SWAP         db   20
 %define POP          db   21
-%define LOADVAR      db   22
+
+%macro LOADVAR 1
+db                        22
+dd %1
+%endmacro
+
 %define LOADSVAR     db   23    
 %define LOADCTXVAR   db   24    
-%define STOREVAR     db   25    
+
+%macro STOREVAR 1
+db                        25
+dd %1
+%endmacro
+
 %define STORECTXVAR  db   26    
 %define DCMP         db   27
 %define ICMP         db   28
