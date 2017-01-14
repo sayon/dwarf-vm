@@ -144,33 +144,34 @@ OPCODE_HANDLER(STOP) {exit(0); }
 
 
 __attribute__((always_inline))
-static void ctx_init( struct vm_ctx* ctx, 
-        void* ret_addr, 
-        struct vm_fun* fun,
-        struct vm_ctx* prev,
-        struct vm_ctx* prev_same_id 
-            ) {
-        ctx-> ret_addr = ret_addr,
-        ctx-> ctx_prev = prev;
-        ctx-> ctx_prev_same_id = prev_same_id;
-        ctx-> fun = fun;
-        fun->meta.topmost_present = ctx;
+static void ctx_push( struct vm_machine* vm, void* ret_addr, struct vm_fun* fun) {
 
+        const size_t ctx_size = sizeof( struct vm_ctx ) + fun->meta.locals_count * sizeof( vm_val );
+
+        struct vm_ctx* const new_ctx = (void*)vm-> ctx_stack_ptr - ctx_size;
+        struct vm_ctx* const old_ctx = vm->ctx_stack_ptr;
+
+        new_ctx-> ret_addr = ret_addr,
+        new_ctx-> ctx_prev = old_ctx;
+        new_ctx-> ctx_prev_same_id = fun->meta.topmost_present;
+        new_ctx-> fun = fun;
+        fun->meta.topmost_present = new_ctx;
+
+        vm->ctx_stack_ptr = new_ctx;
+    }
+
+__attribute__((always_inline))
+static void ctx_pop( struct vm_machine* vm) {
+        vm-> ctx_stack_ptr->fun->meta.topmost_present =
+            vm-> ctx_stack_ptr->ctx_prev_same_id;
+        vm-> ctx_stack_ptr = vm->ctx_stack_ptr->ctx_prev;
     }
 
 OPCODE_HANDLER(CALL) {
         vm_val fun_id = val_at( vm->instr_ptr + 1);
         struct vm_fun* const fun = vm->prog.funs.by_id + fun_id.as_int;
-
-        struct vm_ctx* const old_sp = vm-> ctx_stack_ptr;
-        const size_t ctx_size = sizeof( struct vm_ctx ) + fun->meta.locals_count * sizeof( vm_val ); 
-        vm-> ctx_stack_ptr = ptr_add_raw( vm->ctx_stack_ptr, ctx_size );
        
-        ctx_init( vm-> ctx_stack_ptr,
-                  vm-> instr_ptr + 9,
-                  fun, 
-                  old_sp,
-                  fun->meta.topmost_present );
+        ctx_push( vm, vm-> instr_ptr + 9, fun );
         vm->instr_ptr = fun->code - 9;
     }
 
@@ -178,9 +179,7 @@ OPCODE_HANDLER_UNIMPLEMENTED(CALLNATIVE);
 
 OPCODE_HANDLER(RETURN) {
         vm->instr_ptr = vm->ctx_stack_ptr->ret_addr - 1;
-        vm-> ctx_stack_ptr->fun->meta.topmost_present =
-            vm-> ctx_stack_ptr->ctx_prev_same_id;
-        vm-> ctx_stack_ptr = vm->ctx_stack_ptr->ctx_prev;
+        ctx_pop( vm );
     }
 
 OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
@@ -188,6 +187,7 @@ OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
 
     void interpret( struct vm_machine* vm, uint64_t id, FILE* debug ) {
         vm->instr_ptr = vm->prog.funs.by_id[id].code;
+        ctx_push ( vm, NULL, &vm->prog.funs.by_id[id] );
 
 #define LABEL_NAME_ARRAY(n,d,l) &&_##n,
 
