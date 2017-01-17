@@ -34,30 +34,74 @@ db                        22
 dd %1
 %endmacro
 
-%define LOADSVAR     db   23    
-%define LOADCTXVAR   db   24    
+%macro LOADSVAR 1
+db                        23
+dd %1
+%endmacro
+
+%macro LOADCTXVAR 2
+db                        24
+dd %1
+dd %2
+%endmacro
 
 %macro STOREVAR 1
 db                        25
 dd %1
 %endmacro
 
-%define STORECTXVAR  db   26    
+%macro STORECTXVAR 2
+db                        26
+dd %1
+dd %2
+%endmacro
+
 %define DCMP         db   27
 %define ICMP         db   28
-%define JA           db   29 
-%define IFICMPNE     db   30    
-%define IFICMPE      db   31
-%define IFICMPG      db   32
-%define IFICMPGE     db   33    
-%define IFICMPL      db   34
-%define IFICMPLE     db   35    
+
+%macro JA 1
+db                        29
+dw %1
+%endmacro
+
+%macro IFICMPNE 1
+db                        30
+dw %1
+%endmacro
+
+%macro IFICMPE 1
+db                        31
+dw %1
+%endmacro
+
+%macro IFICMPG 1
+db                        32
+dw %1
+%endmacro
+
+%macro IFICMPGE 1
+db                        33
+dw %1
+%endmacro
+
+%macro IFICMPL 1
+db                        34
+dw %1
+%endmacro
+
+%define IFICMPLE 1
+db                        35
+dw %1
+%endmacro
+
 %define DUMP         db   36
 %define STOP         db   37
+
 %macro  CALL 1
 db   38
 dq %1
 %endmacro
+
 %define RETURN       db   39
 %define BREAK        db   40
 

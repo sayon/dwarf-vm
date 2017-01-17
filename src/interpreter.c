@@ -94,50 +94,120 @@ OPCODE_HANDLER(SPRINT) {
         vm->data_stack_ptr++; 
     }
 
-OPCODE_HANDLER_UNIMPLEMENTED(I2D);
-OPCODE_HANDLER_UNIMPLEMENTED(D2I);
-OPCODE_HANDLER_UNIMPLEMENTED(S2I);
-OPCODE_HANDLER_UNIMPLEMENTED(SWAP);
-OPCODE_HANDLER_UNIMPLEMENTED(POP);
+OPCODE_HANDLER(I2D) {
+        vm->data_stack_ptr->as_double = (double)vm->data_stack_ptr->as_int;
+    }
+
+OPCODE_HANDLER(D2I) {
+        vm->data_stack_ptr->as_int = (int)vm->data_stack_ptr->as_double;
+    }
+
+OPCODE_HANDLER(S2I) {
+        vm->data_stack_ptr->as_int = atol((const char*) vm->data_stack_ptr->as_ptr);
+    }
+
+OPCODE_HANDLER(SWAP) {
+        const vm_val temp = *(vm->data_stack_ptr);
+        *(vm->data_stack_ptr) = *(vm->data_stack_ptr + 1);
+        *(vm->data_stack_ptr + 1) = temp;
+    }
+
+OPCODE_HANDLER(POP) {
+        vm->data_stack_ptr++;
+    }
 
 OPCODE_HANDLER(LOADVAR) {
         uint32_t id = *(uint32_t*)( vm->instr_ptr + 1);
         vm->data_stack_ptr--;
         *(vm->data_stack_ptr) = vm->ctx_stack_ptr->locals[ id ];
+        if (DEBUG) fprintf( debug, "\tid: %d\tvalue: %d", id, *(vm->data_stack_ptr) );
     }
 
-OPCODE_HANDLER_UNIMPLEMENTED(LOADSVAR);
+OPCODE_HANDLER(LOADSVAR) {
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 1);
+        vm_val str_id = vm->ctx_stack_ptr->locals[ local_id ];
+
+        vm->data_stack_ptr--;
+        vm->data_stack_ptr->as_ptr = (void*)vm->prog.consts.by_id[ str_id.as_int ] ;
+    }
 
 OPCODE_HANDLER(STOREVAR) {
         uint32_t id = *(uint32_t*)( vm->instr_ptr + 1);
         vm->ctx_stack_ptr->locals[ id ] = *(vm->data_stack_ptr);
+        if (DEBUG) fprintf( debug, "\tid: %d\tvalue: %d", id, *(vm->data_stack_ptr) );
         vm->data_stack_ptr++;
     }
 
-OPCODE_HANDLER_UNIMPLEMENTED(LOADCTXVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(STORECTXVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(STORECTXSVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(DCMP);
+OPCODE_HANDLER(LOADCTXVAR) {
+        uint32_t ctx_id = *(uint32_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 5);
+        struct vm_ctx* ctx = vm->ctx_stack_ptr;
+
+        for( uint32_t i = 0; i < ctx_id; ++i) ctx = ctx->ctx_prev;
+
+        vm->data_stack_ptr--;
+        *(vm->data_stack_ptr) = ctx->locals[ local_id ];
+    }
+
+OPCODE_HANDLER(STORECTXVAR) {
+        uint32_t ctx_id = *(uint32_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 5);
+        struct vm_ctx* ctx = vm->ctx_stack_ptr;
+
+        for( uint32_t i = 0; i < ctx_id; ++i) ctx = ctx->ctx_prev;
+
+        ctx->locals[ local_id ] = *(vm->data_stack_ptr);
+        vm->data_stack_ptr++;
+    }
+
+OPCODE_HANDLER(STORECTXSVAR) {
+        uint32_t ctx_id = *(uint32_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 5);
+        struct vm_ctx* ctx = vm->ctx_stack_ptr;
+
+        for( uint32_t i = 0; i < ctx_id; ++i) ctx = ctx->ctx_prev;
+
+        vm_val str_id = ctx->locals[ local_id ];
+
+        vm->data_stack_ptr--;
+        vm->data_stack_ptr->as_ptr = (void*)vm->prog.consts.by_id[ str_id.as_int ] ;
+    }
+
+OPCODE_HANDLER(DCMP) {
+        const vm_val left = *vm->data_stack_ptr++;
+        const vm_val right = *vm->data_stack_ptr;
+        if (DEBUG) fprintf( debug, "\tleft: %f\tright: %f", left.as_double, right.as_double);
+        if ( left.as_double < right.as_double ) vm->data_stack_ptr->as_int = -1;
+        else if ( left.as_double > right.as_double ) vm->data_stack_ptr->as_int = 1;
+        else vm->data_stack_ptr->as_int = 0;
+    }
 OPCODE_HANDLER_UNIMPLEMENTED(ICMP);
 
 OPCODE_HANDLER(JA) {
         int16_t offset = *(int16_t*)( vm->instr_ptr + 1);
+        if (DEBUG) fprintf( debug, "\toffset: %d", offset );
         vm->instr_ptr += offset;
     }
 
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPNE);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPE);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPG);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPGE);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPL);
 
-OPCODE_HANDLER(IFICMPLE) {
-        int16_t offset = *(int16_t*)( vm->instr_ptr + 1);
-        vm_val right = *vm->data_stack_ptr++;
-        vm_val left = *vm->data_stack_ptr++;
-        if (DEBUG) fprintf( debug, "\tleft: %d right: %d", left.as_int, right.as_int );
-        if ( left.as_int <= right.as_int ) vm->instr_ptr += offset;
-}
+#define DEFINE_RELOP(mnemonic, action)\
+OPCODE_HANDLER(mnemonic) {\
+        int16_t offset = *(int16_t*)( vm->instr_ptr + 1);\
+        const vm_val left = *vm->data_stack_ptr++;\
+        const vm_val right = *vm->data_stack_ptr++;\
+        if (DEBUG) fprintf( debug, "\tleft: %d\tright: %d", left.as_int, right.as_int ); \
+        if ( left.as_int action right.as_int ) vm->instr_ptr += offset; \
+    }
+
+DEFINE_RELOP(IFICMPNE, != );
+DEFINE_RELOP(IFICMPE, == );
+DEFINE_RELOP(IFICMPG, > );
+DEFINE_RELOP(IFICMPGE, >= );
+DEFINE_RELOP(IFICMPL, < );
+DEFINE_RELOP(IFICMPLE, <= );
+
+#undef DEFINE_RELOP
+
 OPCODE_HANDLER_UNIMPLEMENTED(DUMP);
 
 OPCODE_HANDLER(STOP) {exit(0); }

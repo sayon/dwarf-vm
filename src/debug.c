@@ -20,7 +20,7 @@ void fun_meta_dump( FILE* f, struct vm_fun const* fun, struct vm_const_pool cons
     fprintf( f, " -- function " );
     if ( pool ) fprintf( f, "%s --\n",  pool->by_id[ fun->meta.sig.name ] );
     else fprintf( f, " name id: %"PRIu64" --", fun->meta.sig.name );
-    fprintf( f, "id: %"PRIu64"\nargs:\n", fun->meta.id );
+    fprintf( f, "id: %"PRIu64"\ncode_sz: %"PRIu64"\nargs:\n", fun->meta.id, fun->code_sz);
 
     if (fun->meta.sig.arg_count)
     for( size_t i = 0; i < fun->meta.sig.arg_count-1; i++ )
