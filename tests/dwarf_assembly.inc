@@ -41,7 +41,7 @@ dd %1
 
 %macro LOADCTXVAR 2
 db                        24
-dd %1
+dq %1
 dd %2
 %endmacro
 
@@ -52,7 +52,7 @@ dd %1
 
 %macro STORECTXVAR 2
 db                        26
-dd %1
+dq %1
 dd %2
 %endmacro
 

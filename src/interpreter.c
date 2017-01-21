@@ -139,38 +139,23 @@ OPCODE_HANDLER(STOREVAR) {
     }
 
 OPCODE_HANDLER(LOADCTXVAR) {
-        uint32_t ctx_id = *(uint32_t*)( vm->instr_ptr + 1);
-        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 5);
-        struct vm_ctx* ctx = vm->ctx_stack_ptr;
+        uint64_t fun_id = *(uint64_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 9);
 
-        for( uint32_t i = 0; i < ctx_id; ++i) ctx = ctx->ctx_prev;
+        struct vm_fun* fun = vm->prog.funs.by_id + fun_id;
 
         vm->data_stack_ptr--;
-        *(vm->data_stack_ptr) = ctx->locals[ local_id ];
+        *(vm->data_stack_ptr) = fun->meta.topmost_present->locals[ local_id ];
     }
 
 OPCODE_HANDLER(STORECTXVAR) {
-        uint32_t ctx_id = *(uint32_t*)( vm->instr_ptr + 1);
-        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 5);
-        struct vm_ctx* ctx = vm->ctx_stack_ptr;
+        uint64_t fun_id = *(uint64_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 9);
 
-        for( uint32_t i = 0; i < ctx_id; ++i) ctx = ctx->ctx_prev;
+        struct vm_fun* fun = vm->prog.funs.by_id + fun_id;
 
-        ctx->locals[ local_id ] = *(vm->data_stack_ptr);
+        fun->meta.topmost_present->locals[ local_id ] = *(vm->data_stack_ptr);
         vm->data_stack_ptr++;
-    }
-
-OPCODE_HANDLER(STORECTXSVAR) {
-        uint32_t ctx_id = *(uint32_t*)( vm->instr_ptr + 1);
-        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 5);
-        struct vm_ctx* ctx = vm->ctx_stack_ptr;
-
-        for( uint32_t i = 0; i < ctx_id; ++i) ctx = ctx->ctx_prev;
-
-        vm_val str_id = ctx->locals[ local_id ];
-
-        vm->data_stack_ptr--;
-        vm->data_stack_ptr->as_ptr = (void*)vm->prog.consts.by_id[ str_id.as_int ] ;
     }
 
 OPCODE_HANDLER(DCMP) {
@@ -181,7 +166,14 @@ OPCODE_HANDLER(DCMP) {
         else if ( left.as_double > right.as_double ) vm->data_stack_ptr->as_int = 1;
         else vm->data_stack_ptr->as_int = 0;
     }
-OPCODE_HANDLER_UNIMPLEMENTED(ICMP);
+OPCODE_HANDLER(ICMP) {
+        const vm_val left = *vm->data_stack_ptr++;
+        const vm_val right = *vm->data_stack_ptr;
+        if (DEBUG) fprintf( debug, "\tleft: %d\tright: %d", left.as_int, right.as_int);
+        if ( left.as_int < right.as_int ) vm->data_stack_ptr->as_int = -1;
+        else if ( left.as_int > right.as_int ) vm->data_stack_ptr->as_int = 1;
+        else vm->data_stack_ptr->as_int = 0;
+    }
 
 OPCODE_HANDLER(JA) {
         int16_t offset = *(int16_t*)( vm->instr_ptr + 1);
