@@ -43,16 +43,13 @@
 
     static void print_INEG(uint8_t* ptr, FILE* f ){ } 
 
-    static void print_IPRINT(uint8_t* ptr, FILE* f ){
-        fprintf( f, " %"PRIi64, ((vm_val*)(ptr+1))->as_int ); 
-    }
+    static void print_IPRINT(uint8_t* ptr, FILE* f ){ }
 
 
     static void print_DPRINT(uint8_t* ptr, FILE* f ){ }
 
 
-    static void print_SPRINT(uint8_t* ptr, FILE* f ){ 
-    }
+    static void print_SPRINT(uint8_t* ptr, FILE* f ){ }
 
 
     static void print_I2D(uint8_t* ptr, FILE* f ){ }
@@ -97,25 +94,39 @@
     static void print_ICMP(uint8_t* ptr, FILE* f ){ }
 
 
-    static void print_JA(uint8_t* ptr, FILE* f ){ }
+    static void print_JA(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
-    static void print_IFICMPNE(uint8_t* ptr, FILE* f ){ }
+    static void print_IFICMPNE(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
-    static void print_IFICMPE(uint8_t* ptr, FILE* f ){ }
+    static void print_IFICMPE(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
-    static void print_IFICMPG(uint8_t* ptr, FILE* f ){ }
+    static void print_IFICMPG(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
-    static void print_IFICMPGE(uint8_t* ptr, FILE* f ){ }
+    static void print_IFICMPGE(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
-    static void print_IFICMPL(uint8_t* ptr, FILE* f ){ }
+    static void print_IFICMPL(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
-    static void print_IFICMPLE(uint8_t* ptr, FILE* f ){ }
+    static void print_IFICMPLE(uint8_t* ptr, FILE* f ){
+        fprintf( f, " %"PRIi16"\t(0x%"PRIx16") ", *((int16_t*)(ptr+1)), *((int16_t*)(ptr+1)));
+    }
 
 
     static void print_DUMP(uint8_t* ptr, FILE* f ){ }
@@ -146,7 +157,8 @@
 
 #define PRINT_CASE(n, d, l) \
         case BC_##n: \
-        fputs( #n "\t", f);\
+        fprintf(f, "%p\t", ip);\
+        fputs( #n "\t\t", f);\
         print_##n( ip, f  ); \
         fprintf( f, "\n" );\
         ip +=l; \

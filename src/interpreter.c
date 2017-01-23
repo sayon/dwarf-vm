@@ -31,8 +31,10 @@ OPCODE_HANDLER(INVALID) {
 }
 
 OPCODE_HANDLER(LOAD) {
+
         vm->data_stack_ptr --;
         *(vm->data_stack_ptr) = val_at( vm-> instr_ptr+1 );
+        if (DEBUG) fprintf( debug, "\tvalue: %d", *(vm->data_stack_ptr) );
     }
 
 OPCODE_HANDLER(LOADS) {
@@ -92,59 +94,146 @@ OPCODE_HANDLER(SPRINT) {
         vm->data_stack_ptr++; 
     }
 
-OPCODE_HANDLER_UNIMPLEMENTED(I2D);
-OPCODE_HANDLER_UNIMPLEMENTED(D2I);
-OPCODE_HANDLER_UNIMPLEMENTED(S2I);
-OPCODE_HANDLER_UNIMPLEMENTED(SWAP);
-OPCODE_HANDLER_UNIMPLEMENTED(POP);
-OPCODE_HANDLER_UNIMPLEMENTED(LOADVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(LOADSVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(STOREVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(LOADCTXVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(STORECTXVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(STORECTXSVAR);
-OPCODE_HANDLER_UNIMPLEMENTED(DCMP);
-OPCODE_HANDLER_UNIMPLEMENTED(ICMP);
-OPCODE_HANDLER_UNIMPLEMENTED(JA);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPNE);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPE);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPG);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPGE);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPL);
-OPCODE_HANDLER_UNIMPLEMENTED(IFICMPLE);
+OPCODE_HANDLER(I2D) {
+        vm->data_stack_ptr->as_double = (double)vm->data_stack_ptr->as_int;
+    }
+
+OPCODE_HANDLER(D2I) {
+        vm->data_stack_ptr->as_int = (int)vm->data_stack_ptr->as_double;
+    }
+
+OPCODE_HANDLER(S2I) {
+        vm->data_stack_ptr->as_int = atol((const char*) vm->data_stack_ptr->as_ptr);
+    }
+
+OPCODE_HANDLER(SWAP) {
+        const vm_val temp = *(vm->data_stack_ptr);
+        *(vm->data_stack_ptr) = *(vm->data_stack_ptr + 1);
+        *(vm->data_stack_ptr + 1) = temp;
+    }
+
+OPCODE_HANDLER(POP) {
+        vm->data_stack_ptr++;
+    }
+
+OPCODE_HANDLER(LOADVAR) {
+        uint32_t id = *(uint32_t*)( vm->instr_ptr + 1);
+        vm->data_stack_ptr--;
+        *(vm->data_stack_ptr) = vm->ctx_stack_ptr->locals[ id ];
+        if (DEBUG) fprintf( debug, "\tid: %d\tvalue: %d", id, *(vm->data_stack_ptr) );
+    }
+
+OPCODE_HANDLER(LOADSVAR) {
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 1);
+        vm_val str_id = vm->ctx_stack_ptr->locals[ local_id ];
+
+        vm->data_stack_ptr--;
+        vm->data_stack_ptr->as_ptr = (void*)vm->prog.consts.by_id[ str_id.as_int ] ;
+    }
+
+OPCODE_HANDLER(STOREVAR) {
+        uint32_t id = *(uint32_t*)( vm->instr_ptr + 1);
+        vm->ctx_stack_ptr->locals[ id ] = *(vm->data_stack_ptr);
+        if (DEBUG) fprintf( debug, "\tid: %d\tvalue: %d", id, *(vm->data_stack_ptr) );
+        vm->data_stack_ptr++;
+    }
+
+OPCODE_HANDLER(LOADCTXVAR) {
+        uint64_t fun_id = *(uint64_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 9);
+
+        struct vm_fun* fun = vm->prog.funs.by_id + fun_id;
+
+        vm->data_stack_ptr--;
+        *(vm->data_stack_ptr) = fun->meta.topmost_present->locals[ local_id ];
+    }
+
+OPCODE_HANDLER(STORECTXVAR) {
+        uint64_t fun_id = *(uint64_t*)( vm->instr_ptr + 1);
+        uint32_t local_id = *(uint32_t*)( vm->instr_ptr + 9);
+
+        struct vm_fun* fun = vm->prog.funs.by_id + fun_id;
+
+        fun->meta.topmost_present->locals[ local_id ] = *(vm->data_stack_ptr);
+        vm->data_stack_ptr++;
+    }
+
+OPCODE_HANDLER(DCMP) {
+        const vm_val left = *vm->data_stack_ptr++;
+        const vm_val right = *vm->data_stack_ptr;
+        if (DEBUG) fprintf( debug, "\tleft: %f\tright: %f", left.as_double, right.as_double);
+        if ( left.as_double < right.as_double ) vm->data_stack_ptr->as_int = -1;
+        else if ( left.as_double > right.as_double ) vm->data_stack_ptr->as_int = 1;
+        else vm->data_stack_ptr->as_int = 0;
+    }
+OPCODE_HANDLER(ICMP) {
+        const vm_val left = *vm->data_stack_ptr++;
+        const vm_val right = *vm->data_stack_ptr;
+        if (DEBUG) fprintf( debug, "\tleft: %d\tright: %d", left.as_int, right.as_int);
+        if ( left.as_int < right.as_int ) vm->data_stack_ptr->as_int = -1;
+        else if ( left.as_int > right.as_int ) vm->data_stack_ptr->as_int = 1;
+        else vm->data_stack_ptr->as_int = 0;
+    }
+
+OPCODE_HANDLER(JA) {
+        int16_t offset = *(int16_t*)( vm->instr_ptr + 1);
+        if (DEBUG) fprintf( debug, "\toffset: %d", offset );
+        vm->instr_ptr += offset;
+    }
+
+
+#define DEFINE_RELOP(mnemonic, action)\
+OPCODE_HANDLER(mnemonic) {\
+        int16_t offset = *(int16_t*)( vm->instr_ptr + 1);\
+        const vm_val left = *vm->data_stack_ptr++;\
+        const vm_val right = *vm->data_stack_ptr++;\
+        if (DEBUG) fprintf( debug, "\tleft: %d\tright: %d", left.as_int, right.as_int ); \
+        if ( left.as_int action right.as_int ) vm->instr_ptr += offset; \
+    }
+
+DEFINE_RELOP(IFICMPNE, != );
+DEFINE_RELOP(IFICMPE, == );
+DEFINE_RELOP(IFICMPG, > );
+DEFINE_RELOP(IFICMPGE, >= );
+DEFINE_RELOP(IFICMPL, < );
+DEFINE_RELOP(IFICMPLE, <= );
+
+#undef DEFINE_RELOP
+
 OPCODE_HANDLER_UNIMPLEMENTED(DUMP);
 
 OPCODE_HANDLER(STOP) {exit(0); }
 
 
 __attribute__((always_inline))
-static void ctx_init( struct vm_ctx* ctx, 
-        void* ret_addr, 
-        struct vm_fun* fun,
-        struct vm_ctx* prev,
-        struct vm_ctx* prev_same_id 
-            ) {
-        ctx-> ret_addr = ret_addr,
-        ctx-> ctx_prev = prev;
-        ctx-> ctx_prev_same_id = prev_same_id;
-        ctx-> fun = fun;
-        fun->meta.topmost_present = ctx;
+static void ctx_push( struct vm_machine* vm, void* ret_addr, struct vm_fun* fun) {
 
+        const size_t ctx_size = sizeof( struct vm_ctx ) + fun->meta.locals_count * sizeof( vm_val );
+
+        struct vm_ctx* const new_ctx = (void*)vm-> ctx_stack_ptr - ctx_size;
+        struct vm_ctx* const old_ctx = vm->ctx_stack_ptr;
+
+        new_ctx-> ret_addr = ret_addr,
+        new_ctx-> ctx_prev = old_ctx;
+        new_ctx-> ctx_prev_same_id = fun->meta.topmost_present;
+        new_ctx-> fun = fun;
+        fun->meta.topmost_present = new_ctx;
+
+        vm->ctx_stack_ptr = new_ctx;
+    }
+
+__attribute__((always_inline))
+static void ctx_pop( struct vm_machine* vm) {
+        vm-> ctx_stack_ptr->fun->meta.topmost_present =
+            vm-> ctx_stack_ptr->ctx_prev_same_id;
+        vm-> ctx_stack_ptr = vm->ctx_stack_ptr->ctx_prev;
     }
 
 OPCODE_HANDLER(CALL) {
         vm_val fun_id = val_at( vm->instr_ptr + 1);
         struct vm_fun* const fun = vm->prog.funs.by_id + fun_id.as_int;
-
-        struct vm_ctx* const old_sp = vm-> ctx_stack_ptr;
-        const size_t ctx_size = sizeof( struct vm_ctx ) + fun->meta.locals_count * sizeof( vm_val ); 
-        vm-> ctx_stack_ptr = ptr_add_raw( vm->ctx_stack_ptr, ctx_size );
        
-        ctx_init( vm-> ctx_stack_ptr,
-                  vm-> instr_ptr + 9,
-                  fun, 
-                  old_sp,
-                  fun->meta.topmost_present );
+        ctx_push( vm, vm-> instr_ptr + 9, fun );
         vm->instr_ptr = fun->code - 9;
     }
 
@@ -152,9 +241,7 @@ OPCODE_HANDLER_UNIMPLEMENTED(CALLNATIVE);
 
 OPCODE_HANDLER(RETURN) {
         vm->instr_ptr = vm->ctx_stack_ptr->ret_addr - 1;
-        vm-> ctx_stack_ptr->fun->meta.topmost_present =
-            vm-> ctx_stack_ptr->ctx_prev_same_id;
-        vm-> ctx_stack_ptr = vm->ctx_stack_ptr->ctx_prev;
+        ctx_pop( vm );
     }
 
 OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
@@ -162,6 +249,7 @@ OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
 
     void interpret( struct vm_machine* vm, uint64_t id, FILE* debug ) {
         vm->instr_ptr = vm->prog.funs.by_id[id].code;
+        ctx_push ( vm, NULL, &vm->prog.funs.by_id[id] );
 
 #define LABEL_NAME_ARRAY(n,d,l) &&_##n,
 
@@ -177,7 +265,7 @@ OPCODE_HANDLER_UNIMPLEMENTED(BREAK);
         _##n: \
         if (DEBUG) fprintf( debug, "IP: %p " #n, vm->instr_ptr ); \
         interpret_##n( vm, debug ); \
-        if (DEBUG) fprintf( debug, "n" ); \
+        if (DEBUG) fprintf( debug, "\n" ); \
         vm->instr_ptr+=l; \
         goto *labels[ *vm->instr_ptr ];
 

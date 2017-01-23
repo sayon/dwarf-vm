@@ -19,6 +19,8 @@ static void link_CALL( uint8_t* code, void* ctx) {
 void prog_link_calls( struct vm_prog* prog ) {
     struct vm_code_transform link = {0};
     link.for_CALL = link_CALL;
+    link.for_LOADCTXVAR = link_CALL;
+    link.for_STORECTXVAR = link_CALL;
     for( size_t i = 0; i < prog->funs.count; i++ ) {
     bc_perform_inplace_transformation( &link, 
             prog->funs.by_id[i].code,

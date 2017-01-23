@@ -51,9 +51,9 @@
         DO(POP  ,		"Remove topmost value.", 1)\
         DO(LOADVAR,		"Load value from variable, whose 4-byte id is inlined to insn stream, push on TOS.", 5)\
         DO(LOADSVAR,	"Load constant pool string address by its id, taken from from variable, whose 4-byte id is inlined to insn stream.", 5)\
-        DO(LOADCTXVAR,	"Load value from a variable whose 4-byte context id and 4-byte id is inlined into insn stream.", 9)\
+        DO(LOADCTXVAR,	"Load value from a local variable of function's topmost context whose 8-byte function id and 4-byte id is inlined into insn stream.", 13)\
         DO(STOREVAR,	"Pop TOS and store to a variable, whose 4-byte id is inlined to insn stream.", 5)\
-        DO(STORECTXVAR,	"Pop TOS and store to double variable, whose 4-byte context and 4-byte id is inlined to insn stream.", 7)\
+        DO(STORECTXVAR,	"Pop TOS and store to a local variable of function's topmost context, whose 8-byte function id and 4-byte id is inlined to insn stream.", 13)\
         DO(DCMP,		"Compare 2 topmost doubles, pushing libc-style comparator value cmp(upper, lower) as integer.", 1)\
         DO(ICMP,		"Compare 2 topmost ints, pushing libc-style comparator value cmp(upper, lower) as integer.", 1)\
         DO(JA,	    	"Jump always, next two bytes - signed offset of jump destination.", 3)\
