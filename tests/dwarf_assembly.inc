@@ -89,7 +89,7 @@ db                        34
 dw %1
 %endmacro
 
-%define IFICMPLE 1
+%macro IFICMPLE 1
 db                        35
 dw %1
 %endmacro
