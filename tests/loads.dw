@@ -6,7 +6,7 @@ db 'hello', 0
 db 'main', 0
 ENDCONST
 
-FUNCTIONS
+FUNCTIONS_COUNT 2
 
 fun_main:
 dq 1
@@ -14,12 +14,16 @@ dq 0
 dq 0
 dq 0
 times 16 db 0
-dq .bc_end - .bc_start
-.bc_start:
+CODE_SIZE 
+
+CODE 
+
 LOADS 1
 SPRINT
 STOP
-.bc_end:
+
+ENDCODE 
+
 
 fun_other:
 dq 0
@@ -27,11 +31,12 @@ dq 0
 dq 0
 dq 0
 times 16 db 0
-dq .bc_end - .bc_start
-.bc_start:
+CODE_SIZE
+
+CODE
+
 LOADS 0
 SPRINT
 STOP
-.bc_end:
 
-FUNCTIONS_END
+ENDCODE
