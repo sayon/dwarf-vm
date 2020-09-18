@@ -55,4 +55,4 @@ clean:
 	rm -rf $(BUILDDIR) $(OBJDIR)
 	rm -f $(TESTTARGETS)
 
-.PHONEY: dirs clean docs
+.PHONY: dirs clean docs
